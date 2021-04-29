@@ -1,0 +1,169 @@
+## 1. 多个TextField业务场景
+
+页面从上到下，有多个输入框UITextField，为了优化用户体验，给软键盘的return按钮提供`Next`或`Done`选项，这样用户可以通过`Next`按钮，跳转到下一个输入框，通过`Done`将键盘收起。
+
+主要处理流程如下代码所示，
+
+```
+let tf0 = UITextField()
+tf0.delegate = self
+tf0.keyboardType = .next
+
+let tf1 = UITextField()
+tf1.delegate = self
+tf1.keyboardType = .next
+
+let tf2 = UITextField()
+tf2.delegate = self
+tf2.keyboardType = .next
+
+extension SomeVC: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == tf0, textField.returnKeyType == .next {
+            tf1.becomeFirstResponder()
+        } else if textField == tf1, textField.returnKeyType == .next {
+            tf1.becomeFirstResponder()
+        } else if textField == tf2, textField.returnKeyType == .done {
+            tf2.resignFirstResponder
+        }
+        return true
+    }
+}
+
+
+```
+
+## 2. UITextField常用代理方法
+
+如下代码所示，列出了UITextFieldDelegate协议定义的所有方法，
+
+```
+
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField;        // return NO to disallow editing.
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField;           // became first responder
+
+- (BOOL)textFieldShouldEndEditing:(UITextField *)textField;          // return YES to allow editing to stop and to resign first responder status. NO to disallow the editing session to end
+
+- (void)textFieldDidEndEditing:(UITextField *)textField;             // may be called if forced even if shouldEndEditing returns NO (e.g. view removed from window) or endEditing:YES called
+
+
+- (void)textFieldDidEndEditing:(UITextField *)textField reason:(UITextFieldDidEndEditingReason)reason API_AVAILABLE(ios(10.0)); // if implemented, called in place of textFieldDidEndEditing:
+
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string;   // return NO to not change text
+
+// TextFiled输入的内容改变
+- (void)textFieldDidChangeSelection:(UITextField *)textField API_AVAILABLE(ios(13.0), tvos(13.0));
+
+
+- (BOOL)textFieldShouldClear:(UITextField *)textField;               // called when clear button pressed. return NO to ignore (no notifications)
+
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField;              // called when 'return' key pressed. return NO to ignore.
+```
+
+```
+extension ContactInfoView: UITextFieldDelegate {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        guard let text = textField.text else {
+            return true
+        }
+        updateGoButtonState()
+
+        if textField == cardNumberTextField {
+            let textLength = text.count + string.count - range.length
+            return textLength <= 4
+        }
+
+        return true
+    }
+
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        guard textField == amountTextField else {
+            return true
+        }
+
+        let price: String = textField.text ?? "0"
+        if string.count == 0, Double(price) == 0 {
+            return true
+        }
+
+        let userEnteredString = textField.text ?? ""
+        var newString = (userEnteredString as NSString).replacingCharacters(in: range, with: string) as NSString
+        newString = newString.replacingOccurrences(of: ".", with: "") as NSString
+
+        let centAmount = newString.integerValue
+        let amount = (Double(centAmount) / 100.0)
+
+        if newString.length < 16 {
+            textField.text = String(format: "%0.2f", arguments: [amount])
+        }
+        updateGoButtonState()
+        return false // return false for exact out put
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        if textField == contactView.emailField {
+            isEmailValid = contactView.emailField.text?.isValidEmail ?? false
+            contactView.refreshUI(isInputValid: isEmailValid)
+        }
+        updateGoButtonState()
+    }
+
+
+    // iOS 13之后提供的api，监测UITextField的变化
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        if textField == contactView.emailField {
+            contactView.refreshUI(isInputValid: true)
+        }
+        updateGoButtonState()
+    }
+
+
+    // iOS 13之前的方案
+    /***
+    * 
+    
+    - 参考链接
+        - https://www.jianshu.com/p/81eeb77143a2
+
+    self.accountTF addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+
+    - (void) textFieldDidChange:(id) sender {
+
+        if (self.accountTF.text.length>0) {
+            self.submitBtn.backgroundColor = [UIColor redColor];
+        } else {
+            self.submitBtn.backgroundColor = [UIColor grayColor];
+        }
+
+    }
+    */
+
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == contactView.firstField, textField.returnKeyType == .next {
+            contactView.lastField.becomeFirstResponder()
+        } else if textField == contactView.lastField, textField.returnKeyType == .next {
+            contactView.emailField.becomeFirstResponder()
+        } else if textField == contactView.emailField, textField.returnKeyType == .next {
+            contactView.phoneField.becomeFirstResponder()
+        } else if textField == contactView.phoneField, textField.returnKeyType == .next {
+            mailingInfoView.streetField.becomeFirstResponder()
+        } else if textField == mailingInfoView.streetField, textField.returnKeyType == .next {
+            mailingInfoView.optionalField.becomeFirstResponder()
+        } else if textField == mailingInfoView.optionalField, textField.returnKeyType == .next {
+            mailingInfoView.cityField.becomeFirstResponder()
+        } else if textField == mailingInfoView.cityField, textField.returnKeyType == .next {
+            mailingInfoView.zipField.becomeFirstResponder()
+        }
+
+        return true
+    }
+}
+
+
+```

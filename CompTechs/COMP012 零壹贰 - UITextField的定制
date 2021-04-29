@@ -1,0 +1,38 @@
+## 1. 为键盘定义Toolbar
+
+UITextFiled可以设置键盘的keybaordType，例如默认的英文软键盘，也可以设置`.number`或`.decimal`，分别对应数字键盘和小数键盘。
+
+这种情况下，键盘没有return按键，此时可以给键盘上方定制一个Toolbar，Toolbar可以设置`Done`或`Next`按钮，代替return按键，代码如下所示，
+
+```
+extension UITextField{
+
+ func addDoneButtonToKeyboard(myAction:Selector?){
+    let doneToolbar: UIToolbar = UIToolbar(frame: CGRect(x: 0, y: 0, width: 300, height: 40))
+    doneToolbar.barStyle = UIBarStyle.default
+
+    let flexSpace = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: nil, action: nil)
+    let done: UIBarButtonItem = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.done, target: self, action: myAction)
+
+    var items = [UIBarButtonItem]()
+    items.append(flexSpace)
+    items.append(done)
+
+    doneToolbar.items = items
+    doneToolbar.sizeToFit()
+
+    self.inputAccessoryView = doneToolbar
+ }
+}
+```
+
+其实就是设置UITextField的inputAccessoryView。
+
+## 2. 键盘输入中文限制
+
+
+
+## n. 参考链接
+
+- [How to add a return key on a decimal pad in Swift?](https://stackoverflow.com/questions/38133853/how-to-add-a-return-key-on-a-decimal-pad-in-swift)
+- [Swift - 限制TextField只能输入中文（附：中文字数的限制）](https://www.hangge.com/blog/cache/detail_1907.html)

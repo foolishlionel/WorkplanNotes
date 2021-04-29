@@ -1,0 +1,62 @@
+
+
+## 1. 多次commits存在的问题
+
+在开发一个功能的时候会反复地提交代码，会造成一个功能多次提交，在我们像master做分支合并的时候，就会出现很多commits，在合并以后，同一个功能的commits就会很多，导致我们无法清晰地知道这个功能关联的commit有哪些，这时候squash就可以优化我们的commits信息，让版本仓库看起来简洁明了。
+
+## 2. squash的使用
+
+使用比较简单，例如开发者想将本地开发分支的内容合并到master分支上面，并且期望将一个功能的所有提交，压缩成一个commit，可以按照如下步骤操作。
+
+
+### 2.1 切换master分支，并同步远程仓库
+
+```
+// 切换master分支
+git checkout master
+// 拉取远程代码
+git pull
+```
+
+这里一定要做同步，若本地代码和远程仓库不同步的话，那么当我们squash时，就会有很多远端的修改进入我们的commits中。
+
+### 2.2 切换dev开发分支，并执行commits合并操作
+
+```
+// 切换dev分支
+git checkout dev
+// 进行rebase操作
+git rebase -i master
+```
+
+执行上面的命令之后，会进入编辑模式，如下所示，
+
+```
+// 原先的命令
+pick xxx: commit1 add : add xxx 
+pick xxx: commit2 fix: update xxxx
+pick xxx: commit3 fix: delete xxx
+pick xxx: commit4 modify : update xxxx 
+// 进入编辑模式，将除第一行的pick外，其余的pick都改成 squash ，退出编辑模式，保存即可
+// 修改文本，将pick -> squash之后的命令
+pick xxx: commit1 add : add xxx 
+squash xxx: commit2 fix: update xxxx
+squash xxx: commit3 fix: delete xxx
+squash xxx: commit4 modify : update xxxx 
+```
+
+上面操作执行顺利的话，继续执行下面的操作，如下所示，
+
+```
+git push -f
+```
+
+## 3. squash注意点
+
+注意：squash操作后，你的提交信息就变成了一次提交，会记录你之前提交的描述信息，但是已经看不到相关的提交记录了。
+
+**如果不想丢失自己的提交记录，操作的时候还是要慎重一点。**
+
+## n. 参考链接
+
+- []()
